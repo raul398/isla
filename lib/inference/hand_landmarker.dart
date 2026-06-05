@@ -62,15 +62,9 @@ class HandLandmarker {
       debugPrint('HandLandmarker: GPU delegate created');
     } catch (_) {
       debugPrint(
-        'HandLandmarker: GPU delegate unavailable, falling back to CPU',
+        'HandLandmarker: GPU delegate unavailable, using default CPU',
       );
-      try {
-        options.addDelegate(CpuDelegate(numThreads: 4));
-      } catch (_) {
-        debugPrint(
-          'HandLandmarker: CPU delegate init failed (non-fatal)',
-        );
-      }
+      // CPU is the default delegate in tflite_flutter.
       _useGpu = false;
     }
 

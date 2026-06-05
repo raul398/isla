@@ -92,7 +92,7 @@ void main() {
         expect(output.isFinal, isTrue);
       });
 
-      test('window expiry flushes and starts new window via stream', () {
+      test('window expiry flushes and starts new window via stream', () async {
         // processGesture() always returns isFinal=false.
         // isFinal=true translations are emitted on the output stream.
         final onStream = <Translation>[];
@@ -116,6 +116,7 @@ void main() {
         translator.processGesture(g2);
 
         // Stream: [0] partial:'hola' → [1] isFinal:true confirmed:'hola' → [2] partial:'gracias'
+        await Future<void>.delayed(Duration.zero);
         expect(onStream.length, 3);
         expect(onStream[1].isFinal, isTrue,
             reason: 'window expired via gap detection');
@@ -167,8 +168,8 @@ void main() {
         inferenceCtrl = StreamController<Translation>.broadcast();
         return ProviderContainer(
           overrides: [
-            inferenceStreamProvider.overrideWithProvider(
-              StreamProvider<Translation>((ref) => inferenceCtrl.stream),
+            inferenceStreamProvider.overrideWith(
+              (ref) => inferenceCtrl.stream,
             ),
           ],
         );
@@ -176,6 +177,12 @@ void main() {
 
       setUp(() {
         container = _buildContainer();
+        // Pre-warm the inference provider so CaptionProvider can subscribe.
+        container.read(inferenceStreamProvider);
+        // Pre-create CaptionProvider so its ref.listen is registered before
+        // any test emits events. Without this, events emitted on the broadcast
+        // stream before the provider is read are lost forever.
+        container.read(captionProvider);
       });
 
       tearDown(() async {
@@ -257,11 +264,16 @@ void main() {
         inferenceCtrl = StreamController<Translation>.broadcast();
         container = ProviderContainer(
           overrides: [
-            inferenceStreamProvider.overrideWithProvider(
-              StreamProvider<Translation>((ref) => inferenceCtrl.stream),
+            inferenceStreamProvider.overrideWith(
+              (ref) => inferenceCtrl.stream,
             ),
           ],
         );
+        // Pre-warm the inference provider so CaptionProvider can subscribe.
+        container.read(inferenceStreamProvider);
+        // Pre-create CaptionProvider so its ref.listen is registered before
+        // any test emits events.
+        container.read(captionProvider);
       });
 
       tearDown(() async {
@@ -298,7 +310,7 @@ void main() {
           ));
         }
 
-        final state = readState();
+        final state = container.read(captionProvider).asData!.value;
         expect(state.confirmedText, 'hola',
             reason: 'gesture "hola" confirmed by caption provider');
         expect(state.isEmpty, isFalse,
@@ -347,7 +359,7 @@ void main() {
           await feed(Translation(partialText: p3.partialText, confirmedText: '', isFinal: false));
         }
 
-        final state = readState();
+        final state = container.read(captionProvider).asData!.value;
         expect(state.confirmedText, 'yo querer agua',
             reason: 'full phrase confirmed in caption');
         expect(state.partialText, '',

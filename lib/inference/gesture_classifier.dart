@@ -73,12 +73,7 @@ class GestureClassifier {
   Future<void> loadModel() async {
     try {
       final options = InterpreterOptions();
-      try {
-        options.addDelegate(CpuDelegate(numThreads: 2));
-      } catch (_) {
-        debugPrint('GestureClassifier: CPU delegate unavailable');
-      }
-
+      // CPU is the default delegate in tflite_flutter.
       _interpreter = await Interpreter.fromAsset(
         'models/classifier.tflite',
         options: options,

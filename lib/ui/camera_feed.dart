@@ -142,12 +142,16 @@ class _CameraPreviewWidget extends ConsumerWidget {
       child: FittedBox(
         fit: BoxFit.cover,
         child: SizedBox(
-          width: controller.value.previewSize?.width ?? controller.description.sensorOrientation == 90 || controller.description.sensorOrientation == 270
-              ? controller.value.previewSize?.height ?? 640
-              : controller.value.previewSize?.width ?? 640,
-          height: controller.value.previewSize?.height ?? controller.description.sensorOrientation == 90 || controller.description.sensorOrientation == 270
-              ? controller.value.previewSize?.width ?? 480
-              : controller.value.previewSize?.height ?? 480,
+          width: controller.value.previewSize?.width ??
+              (controller.description.sensorOrientation == 90 ||
+                      controller.description.sensorOrientation == 270
+                  ? controller.value.previewSize?.height ?? 640
+                  : controller.value.previewSize?.width ?? 640),
+          height: controller.value.previewSize?.height ??
+              (controller.description.sensorOrientation == 90 ||
+                      controller.description.sensorOrientation == 270
+                  ? controller.value.previewSize?.width ?? 480
+                  : controller.value.previewSize?.height ?? 480),
           child: CameraPreview(controller),
         ),
       ),
@@ -193,12 +197,12 @@ class _LandmarkOverlayPainter extends CustomPainter {
 
     // Bottom-left corner.
     canvas.drawLine(
-        const Offset(gap, size.height - gap),
-        const Offset(gap, size.height - gap - markerLen),
+        Offset(gap, size.height - gap),
+        Offset(gap, size.height - gap - markerLen),
         paint);
     canvas.drawLine(
-        const Offset(gap, size.height - gap),
-        const Offset(gap + markerLen, size.height - gap),
+        Offset(gap, size.height - gap),
+        Offset(gap + markerLen, size.height - gap),
         paint);
 
     // Bottom-right corner.

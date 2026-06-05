@@ -55,7 +55,7 @@ void main() {
     // Window expiry — gap > 2 s triggers flush
     // -------------------------------------------------------------------------
     test('gap > windowDuration flushes on output stream with isFinal=true '
-        '(spec: sequence-translator window expiry edge)', () {
+        '(spec: sequence-translator window expiry edge)', () async {
       // processGesture() always returns isFinal=false. The isFinal=true
       // Translation is EMITTED on the output stream by _flush().
       // See: SequenceTranslator.processGesture() — return value vs. emit.
@@ -72,6 +72,7 @@ void main() {
       //   [0] partial:'hola', isFinal:false — first gesture
       //   [1]   -> isFinal:true, confirmed:'hola'  — from _flush()
       //   [2] partial:'gracias', isFinal:false — second gesture
+      await Future<void>.delayed(Duration.zero);
       expect(onStream.length, 3);
 
       expect(onStream[0].isFinal, isFalse);

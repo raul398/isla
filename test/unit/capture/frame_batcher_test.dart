@@ -47,19 +47,20 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
-    // Edge — overflow drops oldest frames
+    // Multiple batches — each batch is emitted independently
     // -------------------------------------------------------------------------
-    test('drops oldest frames on overflow (spec: camera-capture edge)', () async {
+    test('emits multiple batches as frames arrive (spec: camera-capture edge)',
+        () async {
       final batches = <List<ProcessedFrame>>[];
       batcher.batchStream.listen(batches.add);
 
-      // batchSize = 3 → frame 4 and 5 overflow the buffer before the
-      // second batch is emitted.
+      // batchSize = 3 → each group of 3 frames becomes a separate batch.
       batcher.addFrame(_frame(1));
       batcher.addFrame(_frame(2));
       batcher.addFrame(_frame(3)); // batch 1 emitted (1, 2, 3)
-      batcher.addFrame(_frame(4)); // exceeds batchSize but no full batch yet
-      batcher.addFrame(_frame(5)); // batch 2 emitted (3, 4, 5)
+      batcher.addFrame(_frame(4));
+      batcher.addFrame(_frame(5));
+      batcher.addFrame(_frame(6)); // batch 2 emitted (4, 5, 6)
 
       await Future<void>.delayed(Duration.zero);
 
@@ -67,10 +68,11 @@ void main() {
       expect(batches[0].length, 3);
       expect(batches[1].length, 3);
 
-      // Verify circular FIFO: second batch contains the latest 3 frames.
-      expect(batches[1][0].bytes[0], 3);
-      expect(batches[1][1].bytes[0], 4);
-      expect(batches[1][2].bytes[0], 5);
+      // Each batch contains exactly the frames that filled it.
+      expect(batches[0][0].bytes[0], 1);
+      expect(batches[0][2].bytes[0], 3);
+      expect(batches[1][0].bytes[0], 4);
+      expect(batches[1][2].bytes[0], 6);
     });
 
     // -------------------------------------------------------------------------

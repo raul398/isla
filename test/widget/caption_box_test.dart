@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,8 +29,8 @@ class CaptionBoxHarness {
 
     h.widget = ProviderScope(
       overrides: [
-        inferenceStreamProvider.overrideWithProvider(
-          StreamProvider<Translation>((ref) => h.inferenceCtrl.stream),
+        inferenceStreamProvider.overrideWith(
+          (ref) => h.inferenceCtrl.stream,
         ),
       ],
       child: const MaterialApp(home: CaptionBox()),
@@ -45,6 +43,9 @@ class CaptionBoxHarness {
   /// Feed a [Translation] into the CaptionProvider and pump the widget.
   Future<void> feed(WidgetTester tester, Translation t) async {
     inferenceCtrl.add(t);
+    // Double pump to flush Riverpod's async propagation chain:
+    //   StreamController → StreamProvider → ref.listen → StateNotifier → rebuild
+    await tester.pump();
     await tester.pump();
   }
 
@@ -117,8 +118,12 @@ void main() {
       await h.feedPartial(tester, 'hola');
     }
 
+    // Extra pump to ensure the confirmation state fully settles.
+    await tester.pump();
+
     // Now feed a new partial after confirmation.
     await h.feedPartial(tester, 'gracias');
+    await tester.pump();
 
     final richText = tester.widget<RichText>(find.byType(RichText));
     final span = richText.text as TextSpan;

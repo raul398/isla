@@ -94,7 +94,8 @@ class SequenceTranslator {
 
       if (gap > _windowDuration) {
         // Gap exceeds window — flush the current buffer before appending.
-        _flush();
+        final flushed = _flush();
+        _outputController.add(flushed);
         _windowStart = now;
         _buffer.add(gesture);
       } else {

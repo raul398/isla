@@ -18,15 +18,23 @@ void main() {
       inferenceController = StreamController<Translation>.broadcast();
       return ProviderContainer(
         overrides: [
-          inferenceStreamProvider.overrideWithProvider(
-            StreamProvider<Translation>((ref) => inferenceController.stream),
+          inferenceStreamProvider.overrideWith(
+            (ref) => inferenceController.stream,
           ),
         ],
       );
     }
 
-    setUp(() {
+    setUp(() async {
       container = _createContainer();
+      // Pre-warm the inference provider so CaptionProvider can subscribe.
+      container.read(inferenceStreamProvider);
+      // Pre-create CaptionProvider so its ref.listen is registered before
+      // any test emits events. Without this, events emitted on the broadcast
+      // stream before the provider is read are lost forever.
+      container.read(captionProvider);
+      // Allow Riverpod to propagate initial values through the chain.
+      await Future<void>.delayed(Duration.zero);
     });
 
     tearDown(() async {

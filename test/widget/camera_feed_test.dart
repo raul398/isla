@@ -33,16 +33,16 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            cameraInitProvider.overrideWithValue(
-              const AsyncError<void>(
-                CameraException('NoCamera', 'No camera available'),
-                StackTrace.empty,
-              ),
-            ),
+            cameraInitProvider.overrideWith((ref) => Future<void>.error(
+                  CameraException('NoCamera', 'No camera available'),
+                )),
           ],
           child: const MaterialApp(home: CameraFeed()),
         ),
       );
+
+      // After error, pump to let the async error propagate.
+      await tester.pump();
 
       expect(find.text('Cámara no disponible'), findsOneWidget,
           reason: 'error title shown');
@@ -64,16 +64,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            cameraInitProvider.overrideWithValue(
-              const AsyncError<void>(
-                CameraException('PermissionDenied', errorMsg),
-                StackTrace.empty,
-              ),
-            ),
+            cameraInitProvider.overrideWith((ref) => Future<void>.error(
+                  CameraException('PermissionDenied', errorMsg),
+                )),
           ],
           child: const MaterialApp(home: CameraFeed()),
         ),
       );
+
+      await tester.pump();
 
       // The error detail is rendered in a bodySmall text.
       expect(find.textContaining(errorMsg), findsOneWidget,
@@ -88,13 +87,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            cameraInitProvider.overrideWithValue(
-              const AsyncData<void>(null),
-            ),
+            cameraInitProvider.overrideWith((ref) => Future<void>.value(null)),
           ],
           child: const MaterialApp(home: CameraFeed()),
         ),
       );
+
+      await tester.pump();
 
       // When cameraInitProvider succeeds, the widget renders:
       //   Stack → [_CameraPreviewWidget, (LandmarkOverlay if showLandmarks)]
@@ -118,13 +117,13 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            cameraInitProvider.overrideWithValue(
-              const AsyncData<void>(null),
-            ),
+            cameraInitProvider.overrideWith((ref) => Future<void>.value(null)),
           ],
           child: const MaterialApp(home: CameraFeed(showLandmarks: true)),
         ),
       );
+
+      await tester.pump();
 
       // showLandmarks=true adds a CustomPaint overlay on top of the Stack.
       expect(find.byType(Stack), findsOneWidget,
