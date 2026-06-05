@@ -20,6 +20,13 @@ class CameraService {
   /// Whether [initCamera] completed successfully.
   bool get isInitialized => _initialized;
 
+  /// The underlying [CameraController] for widget rendering.
+  ///
+  /// Available after [initCamera] completes. `null` before init or after
+  /// [dispose]. The same controller used for frame capture is reused here to
+  /// avoid creating a second native camera session.
+  CameraController? get controller => _controller;
+
   /// Initialises the front camera at 1280×720 (medium preset).
   ///
   /// Camera selection: front → rear → [CameraException].
